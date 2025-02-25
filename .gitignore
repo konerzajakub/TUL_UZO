@@ -1,1 +1,54 @@
 .DS_Store
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.swp
+
+# Virtual Environment
+venv/
+.env/
+
+# Byte-compiled / optimized / DLL files
+*.pyc
+*.pyo
+*.pyd
+
+# Logs and databases
+*.log
+*.sqlite3
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Test coverage reports
+.coverage
+htmlcov/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# Pipenv
+Pipfile
+Pipfile.lock
+
+# Poetry
+poetry.lock
+
+# Docker
+*.pid
+docker-compose.override.yml
+
+# macOS
+.DS_Store
