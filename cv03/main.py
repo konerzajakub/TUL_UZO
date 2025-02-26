@@ -24,6 +24,8 @@ def rotate_image(image, angle):
     h = image.shape[0]
     w = image.shape[1]
     
+    print(f'Original image dimensions: {w}x{h}')
+
     #img_center = (w/2, h/2)
     img_center = np.array([w/2, h/2])
     x_center = w/2
@@ -41,22 +43,47 @@ def rotate_image(image, angle):
 
     # matrix for new image with same size
     rotated_image = np.zeros_like(image)
+    
+    # Calculate new dimensions for the rotated image
+    corners = np.array([
+        [-x_center, -y_center],
+        [x_center, -y_center],
+        [-x_center, y_center],
+        [x_center, y_center]
+    ])
+
+    new_corners = np.dot(rotation_matrix, corners.T).T
+    min_x = np.min(new_corners[:, 0]) + x_center
+    max_x = np.max(new_corners[:, 0]) + x_center
+    min_y = np.min(new_corners[:, 1]) + y_center
+    max_y = np.max(new_corners[:, 1]) + y_center
+
+    new_width = int(max_x - min_x)
+    new_height = int(max_y - min_y)
+    print(f'New matrix dimensions: {new_width}x{new_height}')
+
+    new_center = np.array([new_width / 2, new_height / 2])
+    new_x_center = new_width / 2
+    new_y_center = new_height / 2
+    print(f'New center: \n{new_center}')
+
+    rotated_image = np.zeros((new_height, new_width, image.shape[2]), dtype=image.dtype)
 
     # loop through lines
-    for y in range(h):
+    for y in range(new_height):
         # loop through columns
-        for x in range(w):
+        for x in range(new_width):
 
             # center coordinates
-            original_coords = np.array([x - x_center, y - y_center])
+            original_coords = np.array([x - (new_x_center), y - (new_y_center)])
             
             # rotate coordinates
             new_coords = np.dot(inverse_rotation_matrix, original_coords)
             
             # calculate new regular coordinates
-            if(1):
-                new_x = new_coords[0] + x_center
-                new_y = new_coords[1] + y_center
+            if(True):
+                new_x = new_coords[0] + (x_center)
+                new_y = new_coords[1] + (y_center)
             else:
                 new_x = new_coords[0] #+ x_center
                 new_y = new_coords[1] #+ y_center
