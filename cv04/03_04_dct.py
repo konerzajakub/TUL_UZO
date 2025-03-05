@@ -26,17 +26,19 @@ def limit_dct_spectrum(dct, size):
 def main():
     # nacteni obrazku
     original_image = cv2.imread("./res/cv04c_robotC.bmp", cv2.IMREAD_GRAYSCALE)
-    # origo spektrum
+    #plt.imshow(original_image)
+    #plt.show()
+    # origo dct spektrum
     original_dct_spectrum = dctn(original_image, norm='ortho')
 
-
+    # pozadovane velikosti
     sizes = [10, 30, 50]
     print(len(sizes))
 
     dct = []
     img = []
     for size in sizes:
-        # pro kazdy obrazek vytvoreni spektra a zpetna transformace
+        # pro kazdy obrazek vytvoreni omezeneho spektra a zpetna transformace
         dct_limited = limit_dct_spectrum(original_dct_spectrum, size)
         inverse_image = idctn(dct_limited, norm='ortho')
 
@@ -65,6 +67,7 @@ def main():
         plt.imshow(img[x], cmap='grey')
 
     plt.tight_layout()
+    plt.gcf().canvas.manager.set_window_title('03 04 DCT')
     plt.show()
 
 if __name__ == "__main__":

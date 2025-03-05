@@ -13,6 +13,7 @@ def main():
     fft2 = np.fft.fft2(image)
     #plt.imshow(np.log(np.abs(fft2)))
     spektrum = np.abs(fft2)
+    # presunuti frekvenci do stredu
     upravene_spektrum = np.fft.fftshift(spektrum)
 
     # vykresleni 
@@ -26,6 +27,7 @@ def main():
     plt.title('Posunute kvadranty')
     plt.colorbar()
 
+    plt.gcf().canvas.manager.set_window_title('01 DFT')
     plt.show()
     plt.savefig("./output/01_dft_spectrum.png", dpi=300)
 

@@ -28,9 +28,13 @@ def vypocet_grayscale_histogramu(img):
 
 def vypocet_dct(img):
     # převod do grayscale
+    #plt.imshow(img)
+    #plt.show()
     grayscale_obrazek = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-    
+    #plt.imshow(grayscale_obrazek)
+    #plt.show()
     dct = dctn(grayscale_obrazek, norm='ortho')
+    # beru jen to omezene spektrum, flatten pro 1D vektor
     dct = dct[0:5, 0:5].flatten()
     return dct
 
@@ -59,7 +63,7 @@ def main():
         for j in range(len(obrazky)):
             # Výpočet vzdálenosti mezi histogramy (Bhattacharyya distance)
             #vzdalenost = cv2.compareHist(porovnany_histogram, histogramy[j], cv2.HISTCMP_BHATTACHARYYA)
-            vzdalenost = np.linalg.norm(porovnany_dct - dct_vectors[j])
+            vzdalenost = np.linalg.norm(porovnany_dct - dct_vectors[j]) # euklidovska vzdalenost
             pole_vzdalenost.append((vzdalenost, j))
 
         # Seřazení od nejmenší hodnoty (0.0) po největší vzdálenost
@@ -87,6 +91,7 @@ def main():
             axes[i, j].imshow(radky[i][j])
             axes[i, j].axis('off')
     plt.tight_layout()
+    plt.gcf().canvas.manager.set_window_title('05 s DCT')
     plt.show()
 
 
