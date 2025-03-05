@@ -8,3 +8,6 @@
 
 ## cv03
 - Rotace obrázku
+
+## cv04
+- DFT a DCT
