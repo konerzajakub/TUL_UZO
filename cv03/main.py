@@ -30,7 +30,7 @@ def rotate_image(image, angle):
     img_center = np.array([w/2, h/2])
     x_center = w/2
     y_center = h/2
-    print(img_center)
+    print(f'Image center: {img_center}')
     
     angle_rad = math.radians(angle) # need radians
     print(f'Angle in radians: {angle_rad}')
@@ -42,9 +42,9 @@ def rotate_image(image, angle):
     print(f'Inverse matrix: \n{inverse_rotation_matrix}')
 
     # matrix for new image with same size
-    rotated_image = np.zeros_like(image)
+    #rotated_image = np.zeros_like(image)
     
-    # Calculate new dimensions for the rotated image
+    # side coords
     corners = np.array([
         [-x_center, -y_center],
         [x_center, -y_center],
@@ -58,6 +58,7 @@ def rotate_image(image, angle):
     min_y = np.min(new_corners[:, 1]) + y_center
     max_y = np.max(new_corners[:, 1]) + y_center
 
+    # calc new dimensions
     new_width = int(max_x - min_x)
     new_height = int(max_y - min_y)
     print(f'New matrix dimensions: {new_width}x{new_height}')
@@ -98,7 +99,13 @@ def rotate_image(image, angle):
 def main():
     img = read_image("./res/cv03_robot.bmp")
     
-    for i in range(0,361,45):
+    step = -45
+
+    max_rotation = 361
+    if(step < 0):
+        max_rotation *= -1
+
+    for i in range(0,max_rotation,step):
         print(i)
         rotated_img = rotate_image(img, i)
         cv2.imshow(f"Rotated by {i} degrees", rotated_img)
