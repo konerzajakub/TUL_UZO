@@ -11,3 +11,6 @@
 
 ## cv04
 - DFT a DCT
+
+## cv05
+- Odstranění šumu pomocí a)metoda prostého průměrování, b) pomocí metody s rotující maskou, c) pomocí mediánu
