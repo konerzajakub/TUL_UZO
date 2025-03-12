@@ -5,16 +5,9 @@ from scipy.fft import dctn, idctn
 
 # Diskretni cos transformace
 
+# omezeni DCT spektra na velikost
 def limit_dct_spectrum(dct, size):
     dct_limited = np.zeros_like(dct)  # Vytvoříme nulové spektrum stejné velikosti
-    
-    #center_y = dct.shape[0] // 2
-    #center_x = dct.shape[1] // 2
-    #half = size // 2
-#
-    #for y in range(center_y - half, center_y + half):
-    #    for x in range(center_x - half, center_x + half):
-    #        dct_limited[y, x] = dct[y, x]
 
     for y in range(size):
         for x in range(size):
@@ -22,12 +15,12 @@ def limit_dct_spectrum(dct, size):
 
     return dct_limited
 
-
 def main():
     # nacteni obrazku
     original_image = cv2.imread("./res/cv04c_robotC.bmp", cv2.IMREAD_GRAYSCALE)
     #plt.imshow(original_image)
     #plt.show()
+
     # origo dct spektrum
     original_dct_spectrum = dctn(original_image, norm='ortho')
 
@@ -50,7 +43,7 @@ def main():
 
     plt.subplot(len(dct)+1, 2, 1)
     plt.imshow(np.log(np.abs(original_dct_spectrum)), cmap='jet')
-    plt.title('Original DCT')
+    plt.title('Původní DCT')
     plt.colorbar()
 
     plt.subplot(len(dct)+1, 2, 2)
@@ -60,7 +53,7 @@ def main():
     for x in range(len(dct)):
         plt.subplot(len(dct)+1, 2, (x+1)*2 + 1)
         plt.imshow(np.log(np.abs(dct[x])), cmap='jet')
-        plt.title(f'Size: {sizes[x]}')
+        plt.title(f'Velikost: {sizes[x]}')
         plt.colorbar()
 
         plt.subplot(len(dct)+1, 2, (x+1)*2 + 2)
