@@ -43,92 +43,65 @@ def show_histogram(img):
     return hist_img
 
 
-def simple_averaging_filter(img, kernel_size=3):
-    """
-    Metoda prostého průměrování - implementace pomocí ruční konvoluce
-    s maskou obsahující stejné váhy pro všechny pixely.
-    """
-    # Získání rozměrů obrazu
-    height, width = img.shape[:2]
-
-    # Vytvoření výstupního obrazu (kopie původního)
-    output = np.zeros((height, width), dtype=np.uint8)
-
-    # Velikost okolí (poloměr kernelu)
-    offset = kernel_size // 2
-
-    # Procházení obrazu (mimo okraje, aby kernel nepřetékal)
-    for y in range(offset, height - offset):
-        for x in range(offset, width - offset):
-            # Vybrání okolí pixelu
-            neighborhood = img[y - offset:y + offset + 1, x - offset:x + offset + 1]
-
-            # Výpočet průměru hodnot
-            new_value = np.mean(neighborhood)
-
-            # Uložení do výstupního obrazu
-            output[y, x] = int(new_value)
-
-    return output
-
-
-def rotating_mask_filter(img, kernel_size=3, threshold=30):
-    """
-    Metoda s rotující maskou - pro každý pixel vybere nejlepší masku
-    na základě nejmenšího rozptylu hodnot v okolí
-    """
-    result = np.copy(img)
-    padding = kernel_size // 2
-
-    # Rozšíření obrazu o okraje
-    padded_img = cv2.copyMakeBorder(img, padding, padding, padding, padding, cv2.BORDER_REFLECT)
-
+def simple_averaging_filter(img):
     height, width = img.shape
+    output = np.copy(img)
 
-    # Definice různých masek (horizontální, vertikální, diagonální)
-    masks = [
-        np.zeros((kernel_size, kernel_size)),  # horizontální
-        np.zeros((kernel_size, kernel_size)),  # vertikální
-        np.zeros((kernel_size, kernel_size)),  # diagonální 1
-        np.zeros((kernel_size, kernel_size))  # diagonální 2
+    # Procházení každého pixelu, který má okolí 3x3 (vynecháme 1px okraje)
+    for y in range(1, height - 1):
+        for x in range(1, width - 1):
+            # Extrahujeme 3x3 okolo pixelu
+            window = img[y - 1:y + 2, x - 1:x + 2]
+            # Vypočteme průměr a zaokrouhlíme na celé číslo
+            avg = np.round(np.mean(window)).astype(np.uint8)
+            # Uložení do výstupu
+            output[y, x] = avg
+
+    return output.astype(img.dtype)
+
+
+def rotating_mask_filter(img):
+    # Získat rozměry obrázku
+    H, W = img.shape[:2]
+
+    # Vytvořit výstupní obrázek s typem float pro přesnější výpočty
+    result = img.copy().astype(np.float32)
+
+    # Seznam všech možných pozic (8 pozic kromě středu)
+    positions = [
+        (-1, -1), (-1, 0), (-1, 1),
+        (0, -1), (0, 1),
+        (1, -1), (1, 0), (1, 1)
     ]
 
-    # Vytvoření masek
-    masks[0][kernel_size // 2, :] = 1  # horizontální
-    masks[1][:, kernel_size // 2] = 1  # vertikální
-    for i in range(kernel_size):  # diagonální 1 (levý horní -> pravý dolní)
-        masks[2][i, i] = 1
-    for i in range(kernel_size):  # diagonální 2 (pravý horní -> levý dolní)
-        masks[3][i, kernel_size - 1 - i] = 1
+    # Procházet validní pixely (s okrajem 2px)
+    for i in range(2, H - 2):
+        for j in range(2, W - 2):
+            min_var = np.inf
+            best_mask = None
 
-    # Normalizace masek
-    for i in range(4):
-        masks[i] = masks[i] / np.sum(masks[i])
+            # Pro každou možnou pozici masky
+            for dr, dc in positions:
+                # Vypočítat střed masky
+                x = i - dr
+                y = j - dc
 
-    # Pro každý pixel v obraze
-    for y in range(height):
-        for x in range(width):
-            # Extrakce oblasti kolem pixelu
-            region = padded_img[y:y + kernel_size, x:x + kernel_size]
+                # Extrahovat 3x3 oblast kolem středu
+                mask = img[x - 1:x + 2, y - 1:y + 2]
 
-            # Výpočet průměrů a rozptylů pro každou masku
-            averages = []
-            variances = []
-            for mask in masks:
-                # Výpočet váženého průměru
-                weighted_sum = np.sum(region * mask)
-                averages.append(weighted_sum)
+                # Výpočet rozptylu
+                current_var = np.var(mask)
 
-                # Výpočet rozptylu pro danou masku
-                variance = np.sum(((region - weighted_sum) ** 2) * mask)
-                variances.append(variance)
+                # Aktualizovat nejlepší masku
+                if current_var < min_var:
+                    min_var = current_var
+                    best_mask = mask
 
-            # Výběr masky s nejmenším rozptylem
-            min_var_idx = np.argmin(variances)
-            result[y, x] = averages[min_var_idx]
+            # Aplikovat průměr nejlepší masky
+            result[i, j] = np.mean(best_mask)
 
-    return result
-
+    # Konverze zpět na původní datový typ
+    return result.astype(img.dtype)
 
 def median_filter_manual(img, kernel_size=3):
     """
@@ -142,7 +115,7 @@ def median_filter_manual(img, kernel_size=3):
     result = np.zeros_like(img)
 
     # Velikost "okraje" (padding) kolem centrálního pixelu
-    padding = kernel_size // 2
+    padding = 1
 
     # Rozšíření obrazu o okraje pro zpracování hraničních pixelů
     padded_img = cv2.copyMakeBorder(img, padding, padding, padding, padding, cv2.BORDER_REFLECT)
@@ -175,9 +148,9 @@ def process_image(image_path, fig_title):
         return
 
     # Aplikace filtrů
-    avg_filtered = simple_averaging_filter(original, kernel_size=5)
-    rotating_filtered = rotating_mask_filter(original, kernel_size=5)
-    median_filtered = median_filter_manual(original, kernel_size=5)
+    avg_filtered = simple_averaging_filter(original)
+    rotating_filtered = rotating_mask_filter(original)
+    median_filtered = median_filter_manual(original, kernel_size=3)
 
     # Příprava obrázků, spekter a histogramů
     images = [
