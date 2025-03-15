@@ -6,10 +6,11 @@ import matplotlib.pyplot as plt
 
 def main():
     # ./obrazky/cv04c_robotC.bmp
+    # nacteni grayscale obrazku
     image = cv2.imread("./res/cv04c_robotC.bmp", cv2.IMREAD_GRAYSCALE)
     print(image.shape)
 
-    # ze zadani
+    # FFT ze zadani
     fft2 = np.fft.fft2(image)
     #plt.imshow(np.log(np.abs(fft2)))
     spektrum = np.abs(fft2)
