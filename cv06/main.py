@@ -39,9 +39,9 @@ def zobraz_vysledky(puvodni, detekovane_hrany, nazev):
     plt.title('Spektrum původního obrázku')
     plt.axis('off')
 
-    # Detekované hrany (vlevo dole)
+    # Detekované hrany (vlevo dole) - nyní také v 'jet' barevné mapě
     plt.subplot(223)
-    plt.imshow(detekovane_hrany, cmap='gray')
+    plt.imshow(detekovane_hrany, cmap='jet')
     plt.title(f'{nazev} detektor hran')
     plt.axis('off')
 
@@ -53,7 +53,6 @@ def zobraz_vysledky(puvodni, detekovane_hrany, nazev):
     plt.axis('off')
 
     plt.tight_layout()
-    plt.savefig(f"{nazev}_detektor.png")
     plt.show()
 
 
@@ -170,4 +169,4 @@ zobraz_vysledky(obrazek, laplace_hrany, "Laplaceův")
 zobraz_vysledky(obrazek, sobel_hrany, "Sobelův")
 zobraz_vysledky(obrazek, kirsch_hrany, "Kirschův")
 
-print("Detekce hran dokončena. Výsledky byly uloženy jako PNG soubory.")
+print("Detekce hran dokončena.")
