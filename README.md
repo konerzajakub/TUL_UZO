@@ -14,3 +14,6 @@
 
 ## cv05
 - Odstranění šumu pomocí a)metoda prostého průměrování, b) pomocí metody s rotující maskou, c) pomocí mediánu
+
+## cv06
+- Hranové detektory: Laplaceův, Sobelův a Kirschův
