@@ -57,6 +57,7 @@ def zobraz_vysledky(puvodni, detekovane_hrany, nazev):
 
 
 # 1. Laplaceův hranový detektor
+# aproximuje 2. derivaci
 def laplaceuv_detektor(obrazek):
     vyska, sirka = obrazek.shape
     vystup = np.zeros_like(obrazek, dtype=np.float64)
@@ -66,7 +67,7 @@ def laplaceuv_detektor(obrazek):
         [0, 1, 0],
         [1, -4, 1],
         [0, 1, 0]
-    ])
+    ], dtype=np.float64)
 
     # Aplikace masky
     for y in range(1, vyska - 1):
@@ -75,10 +76,11 @@ def laplaceuv_detektor(obrazek):
             for i in range(-1, 2):
                 for j in range(-1, 2):
                     suma += obrazek[y + i, x + j] * maska[i + 1, j + 1]
-            vystup[y, x] = abs(suma)  # Absolutní hodnota gradientu
+            vystup[y, x] = suma
 
     # Normalizace pro zobrazení
-    vystup = np.clip(vystup, 0, 255)
+    vystup -= vystup.min()  # Posunutí minima na 0
+    vystup = (vystup / vystup.max()) * 255  # Přepočet na rozsah 0–255
     vystup = vystup.astype(np.uint8)
 
     return vystup
@@ -116,8 +118,13 @@ def sobeluv_detektor(obrazek):
             vystup[y, x] = np.sqrt(suma_x ** 2 + suma_y ** 2)
 
     # Normalizace pro zobrazení
-    vystup = np.clip(vystup, 0, 255)
+
+    vystup -= vystup.min()  # Posunutí minima na 0
+    vystup = (vystup / vystup.max()) * 255  # Přepočet na rozsah 0–255
     vystup = vystup.astype(np.uint8)
+
+    #vystup = np.clip(vystup, 0, 255)
+    #vystup = vystup.astype(np.uint8)
 
     return vystup
 
@@ -152,8 +159,12 @@ def kirschuv_detektor(obrazek):
             vystup[y, x] = max_hodnota
 
     # Normalizace pro zobrazení
-    vystup = vystup / vystup.max() * 255
-    vystup = np.clip(vystup, 0, 255)
+    #vystup = vystup / vystup.max() * 255
+    #vystup = np.clip(vystup, 0, 255)
+    #vystup = vystup.astype(np.uint8)
+
+    vystup -= vystup.min()  # Posunutí minima na 0
+    vystup = (vystup / vystup.max()) * 255  # Přepočet na rozsah 0–255
     vystup = vystup.astype(np.uint8)
 
     return vystup
