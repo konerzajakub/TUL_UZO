@@ -1,25 +1,20 @@
 import cv2
 import matplotlib.pyplot as plt
-import os
 import numpy as np
 from scipy.fft import fft2, fftshift
 
-# Načtení obrázku
+# nacteni obrazku
 obrazek = cv2.imread('cv04c_robotC.bmp', cv2.IMREAD_GRAYSCALE)
 if obrazek is None:
-    raise FileNotFoundError(
-        "Obrázek nebyl nalezen. Ujistěte se, že je soubor cv04c_robotC.bmp ve stejné složce jako skript.")
+    raise FileNotFoundError("Obrázek není ve složce.")
 
 
-# Funkce pro výpočet spektra
+# Vypocet spektra
 def vypocti_spektrum(obrazek):
-    # Výpočet FFT
-    fft_obrazek = fft2(obrazek)
-    # Posunutí nulové frekvence do středu
-    fft_posunuto = fftshift(fft_obrazek)
-    # Výpočet magnitudy a převod na logaritmické měřítko
-    magnituda = np.log(1 + np.abs(fft_posunuto))
-    return magnituda
+    fft_obrazek = fft2(obrazek) # Výpočet FFT
+    fft_posunuto = fftshift(fft_obrazek) # Posunutí nulové frekvence do středu
+    magnitudove_spektrum = np.log(1 + np.abs(fft_posunuto)) # Výpočet magnitudy a převod na logaritmické měřítko
+    return magnitudove_spektrum
 
 
 # Funkce pro zobrazení výsledků v matici 2x2
@@ -49,7 +44,7 @@ def zobraz_vysledky(puvodni, detekovane_hrany, nazev):
     plt.subplot(224)
     spektrum_hran = vypocti_spektrum(detekovane_hrany)
     plt.imshow(spektrum_hran, cmap='jet')
-    plt.title(f'Spektrum {nazev}ova detektoru')
+    plt.title(f'Spektrum {nazev}')
     plt.axis('off')
 
     plt.tight_layout()
@@ -77,6 +72,8 @@ def laplaceuv_detektor(obrazek):
                 for j in range(-1, 2):
                     suma += obrazek[y + i, x + j] * maska[i + 1, j + 1]
             vystup[y, x] = suma
+
+
 
     # Normalizace pro zobrazení
     vystup -= vystup.min()  # Posunutí minima na 0
@@ -114,11 +111,10 @@ def sobeluv_detektor(obrazek):
                     suma_x += obrazek[y + i, x + j] * maska_x[i + 1, j + 1]
                     suma_y += obrazek[y + i, x + j] * maska_y[i + 1, j + 1]
 
-            # Výpočet magnitudy gradientu
+            # velikost gradientu
             vystup[y, x] = np.sqrt(suma_x ** 2 + suma_y ** 2)
 
     # Normalizace pro zobrazení
-
     vystup -= vystup.min()  # Posunutí minima na 0
     vystup = (vystup / vystup.max()) * 255  # Přepočet na rozsah 0–255
     vystup = vystup.astype(np.uint8)
@@ -176,8 +172,8 @@ sobel_hrany = sobeluv_detektor(obrazek)
 kirsch_hrany = kirschuv_detektor(obrazek)
 
 # Zobrazení výsledků pro každý detektor
-zobraz_vysledky(obrazek, laplace_hrany, "Laplaceův")
-zobraz_vysledky(obrazek, sobel_hrany, "Sobelův")
-zobraz_vysledky(obrazek, kirsch_hrany, "Kirschův")
+zobraz_vysledky(obrazek, laplace_hrany, "Laplace")
+zobraz_vysledky(obrazek, sobel_hrany, "Sobel")
+zobraz_vysledky(obrazek, kirsch_hrany, "Kirsch")
 
 print("Detekce hran dokončena.")
