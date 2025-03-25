@@ -17,3 +17,6 @@
 
 ## cv06
 - Hranové detektory: Laplaceův, Sobelův a Kirschův
+
+## cv07
+- segmentace minci z obrazku pomoci histogramu a prahu, vypocet teziste
