@@ -1,155 +1,159 @@
-from pathlib import Path
-from collections import deque
-
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
+from pathlib import Path
+from collections import deque
+
+
 def get_histogram(image, smoothing):
-    # ziskani histogramu
+    # ziskani vyhlazeneho histogramu obrazku
     histogram = cv2.calcHist([image], [0], None, [256], [0, 256])
     normalized = histogram / np.max(histogram) * 255
+    
+    flattened = np.ndarray.flatten(normalized) # transformace do 1D pole
 
-    flattened = np.ndarray.flatten(normalized)
-    smoothed = np.convolve(flattened, np.ones(smoothing)/smoothing, mode='same')
-
+    smoothing_filter = np.ones(smoothing) / smoothing
+    smoothed = np.convolve(flattened, smoothing_filter, mode='same')
+    
     return smoothed
+
 
 def get_threshold(array):
     # vypocet hodnoty prahu pro segmentaci z histogramu
-    threshold = np.where((array[1:-1] < array[0:-2]) * (array[1:-1] < array[2:]))[0]
-    threshold = threshold[0]
-
+    differences = (array[1:-1] < array[0:-2]) * (array[1:-1] < array[2:])
+    
+    local_minima = np.where(differences)[0]
+    threshold = local_minima[0]
+    
     return threshold
 
-def get_centers_of_mass(image):
-    # vypocet teziste oblasti, vraci pole souradnic tezist
-    points = []
 
-    for i in range(2, np.max(image) + 1):
+def bfs_coloring(image):
+    # barveni prohledavani do sirky
+    rows, cols = image.shape
+    visited = np.zeros_like(image, dtype=bool)
+    colors = np.zeros_like(image, dtype=np.uint8)
+    directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+    
+    color_count = 0
+    for i in range(rows):
+        for j in range(cols):
+            if not visited[i, j] and image[i, j] == 1:
+                color_count += 1
+                queue = deque([(i, j)])
+                visited[i, j] = True
+                colors[i, j] = color_count
+                
+                while queue:
+                    current_x, current_y = queue.popleft()
+                    
+                    for dx, dy in directions:
+                        new_x, new_y = current_x + dx, current_y + dy
+                        
+                        #if is_valid(new_x, new_y):
+                        if 0 <= new_x < rows and 0 <= new_y < cols:
+                            if not visited[new_x, new_y] and image[new_x, new_y] == 1:
+                                queue.append((new_x, new_y))
+                                visited[new_x, new_y] = True
+                                colors[new_x, new_y] = color_count
+    
+    return colors
+
+
+def mass_center(image):
+    # vypocet teziste oblasti
+    points = []
+    max_region = np.max(image)
+    
+    for i in range(2, max_region + 1):
         copy = np.zeros_like(image)
         copy[image == i] = 1
-
+        
         moments = cv2.moments(copy, True)
-        points.append([int(moments["m10"] / moments["m00"]), int(moments["m01"] / moments["m00"])])
-
+        if moments["m00"] != 0:
+            center_x = int(moments["m10"] / moments["m00"])
+            center_y = int(moments["m01"] / moments["m00"])
+            points.append([center_x, center_y])
+    
     return points
 
 def get_region_values(image, points):
     values = []
-
+    
     for point in points:
-        region_number = image[point[1]][point[0]]
-        number_of_pixels = len(np.argwhere(image == region_number))
-
-        values.append({
-            "point": point,
-            "value": 5 if number_of_pixels > 4000 else 1
-        })
-
+        x, y = point[0], point[1]
+        region_number = image[y][x]
+        region_pixels = np.argwhere(image == region_number)
+        number_of_pixels = len(region_pixels)
+        
+        # pokud ma vic jak 4000 pixelu, tak je to petikoruna
+        if number_of_pixels > 4000:
+            value = 5
+        else:
+            value = 1
+        
+        values.append({"point": point, "value": value})
+    
     return values
 
-def bfs_coloring(image):
-    # barveni pomoci prohledavani do sirky, vraci matici s oblastmi
-    rows, cols = image.shape
-    visited = np.zeros_like(image).astype("bool")
-    colors = np.zeros_like(image).astype("uint8")
-
-    directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
-
-    def is_valid(x, y):
-        return 0 <= x < rows and 0 <= y < cols
-
-    def bfs(x, y, color):
-        queue = deque([(x, y)])
-        visited[x][y] = True
-        colors[x][y] = color
-
-        # Zkoumáme všechny okolní body, dokud je v rámci obrázku, nebyli jsme na něm a je vysegmentovaný jako 1
-        while queue:
-            current_x, current_y = queue.popleft()
-
-            for dx, dy in directions:
-                new_x, new_y = current_x + dx, current_y + dy
-                if all([
-                    is_valid(new_x, new_y),     # Pokud je nový bod v rámci obrázku (abychom nepřetekli mimo něj)
-                    not visited[new_x][new_y],  # Jestli jsme ten bod už náhodou před tím nebarvili
-                    image[new_x][new_y] == 1    # Jestli bod není pozadí, aka dříve jsme tam vysegmentovali něco zajímavého
-                ]):
-                    queue.append((new_x, new_y))
-                    visited[new_x][new_y] = True
-                    colors[new_x][new_y] = color
-
-    color_count = 0
-    for i in range(rows):
-        for j in range(cols):
-            if not visited[i][j] and image[i][j] == 1:
-                color_count += 1
-                bfs(i, j, color_count)
-
-    return colors
 
 def main():
-    _image = cv2.imread(Path("./res/cv07_segmentace.bmp").as_posix())
-    _image = cv2.cvtColor(_image, cv2.COLOR_BGR2RGB)
-
-    red = np.float32(_image[:, :, 0])
-    green = np.float32(_image[:, :, 1])
-    blue = np.float32(_image[:, :, 2])
-
-    # Odečítám od 255, protože čím víc zelený je v obrázku, tím bělější ten pixel bude,
-    # ale mi potřebujeme přesnej opak - když je tam hodně zelený, má to bejt tmavý (páč je zelená v pozadí)
+    image_path = Path("./res/cv07_segmentace.bmp").as_posix()
+    img = cv2.imread(image_path)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    
+    red, green, blue = np.float32(img[:, :, 0]), np.float32(img[:, :, 1]), np.float32(img[:, :, 2])
+    
+    # uprava green dle zadani 
     g = 255 - ((green * 255) / (red + green + blue))
     g_hist = get_histogram(g, 10)
+    
     threshold = get_threshold(g_hist)
-
-    segmented_image = g.copy()
-    segmented_image[segmented_image < threshold] = 0
-    segmented_image[segmented_image >= threshold] = 1
+    
+    segmented_image = np.where(g < threshold, 0, 1)
 
     regions = bfs_coloring(segmented_image)
-    points = get_centers_of_mass(regions)
+    
+    points = mass_center(regions)
+    
     coin_values = get_region_values(regions, points)
 
-    rows = 2
-    cols = 4
+    # vypis hodnot
+    for value in coin_values:
+        print(value)
+    
+    fig, axes = plt.subplots(2, 4, figsize=(12, 6))
+    
+    axes[0, 0].imshow(img)
+    axes[0, 0].set_title("Img")
+    
+    axes[0, 1].imshow(g, cmap="gray")
+    axes[0, 1].set_title("Zelena")
+    
+    axes[0, 2].imshow(segmented_image, cmap="gray")
+    axes[0, 2].set_title("Segmentace obrázku")
 
-    plt.subplot(rows, cols, 1)
-    plt.imshow(_image)
-    plt.title("Vstup")
-
-    plt.subplot(rows, cols, 2)
-    plt.imshow(g, cmap="gray")
-    plt.title("Zelená složka")
-
-    plt.subplot(rows, cols, 3)
-    plt.xlim(0, 255)
-    plt.ylim(0, 255)
-    plt.axis('square')
-    plt.plot(g_hist)
-    plt.vlines([threshold], 0, 255, "red")
-    plt.title("Histogram zelené složky")
-
-    plt.subplot(rows, cols, 4)
-    plt.title("Segmentace obrázku")
-    plt.imshow(segmented_image, cmap="gray")
-
-    plt.subplot(rows, cols, 5)
-    plt.title("Oblasti obrázku")
-    plt.imshow(regions, cmap='jet')
-
-    plt.subplot(rows, cols, 6)
-    plt.title("Těžiště oblastí")
-    plt.imshow(_image)
-    plt.scatter(*zip(*points), marker="+", color="red")
-
-    plt.subplot(rows, cols, 7)
-    plt.title("Hodnota oblastí")
-    plt.imshow(_image)
+    axes[0, 3].plot(g_hist)
+    #axes[0, 3].axvline(threshold, color="red")
+    axes[0, 3].set_xlim(0, 255)
+    axes[0, 3].set_ylim(0, 255)
+    axes[0, 3].set_title("Histogram zelené složky")
+    
+    axes[1, 0].imshow(regions, cmap='jet')
+    axes[1, 0].set_title("Oblasti obrázku")
+    
+    axes[1, 1].imshow(img)
+    axes[1, 1].scatter(*zip(*points), marker="+", color="red")
+    axes[1, 1].set_title("Těžiště oblastí")
+    
+    axes[1, 2].imshow(img)
     for coin in coin_values:
-        print(coin)
-        plt.text(coin.get("point")[0], coin.get("point")[1], coin.get("value"), color="red", fontsize=32, fontfamily="Consolas")
-
+        x, y, value = coin.get("point")[0], coin.get("point")[1], coin.get("value")
+        axes[1, 2].text(x, y, value, color="red", fontsize=16)
+    axes[1, 2].set_title("Hodnota oblastí")
+    
+    plt.tight_layout()
     plt.show()
 
 if __name__ == "__main__":
