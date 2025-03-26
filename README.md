@@ -19,4 +19,4 @@
 - Hranové detektory: Laplaceův, Sobelův a Kirschův
 
 ## cv07
-- Segmentace obrázku s mincemi z obrazku pomocí histogramu a prahu, výpocet těžistě
+- Segmentace obrázku s mincemi z obrazku pomocí histogramu a prahování, výpocet těžistě
