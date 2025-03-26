@@ -20,23 +20,29 @@ def get_histogram(image, smoothing):
 
 
 def get_threshold(array):
-    # vypocet hodnoty prahu pro segmentaci z histogramu
-    differences = (array[1:-1] < array[0:-2]) * (array[1:-1] < array[2:])
-    
-    local_minima = np.where(differences)[0]
-    threshold = local_minima[0]
-    
-    return threshold
+    # Najdi prvky co jsou mensi nez oba sousedi
+    # kazdy prvek se porovna s prvkem nalevo a napravo
+    is_smaller_than_left = array[1:-1] < array[:-2] # prvni a posledni prvek nemaji sousedy
+    is_smaller_than_right = array[1:-1] < array[2:]
+    are_local_minima = is_smaller_than_left & is_smaller_than_right
+
+    # Ziskam indexy vsech lokalnich minim
+    local_minima_indices = np.where(are_local_minima)[0]
+
+    # Vratim prvni lokalni minimum
+    first_threshold = local_minima_indices[0]
+    return first_threshold
 
 
 
 def colors(image):
     rows, cols = image.shape
-    visited = np.zeros_like(image, dtype=bool)
-    colors = np.zeros_like(image, dtype=np.uint8)
-    directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+    visited = np.zeros_like(image, dtype=bool)  # navstivene pixely
+    colors = np.zeros_like(image, dtype=np.uint8)  # output matice s oblastmi
+    directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]  # smery pro 4sousedni okoli hledani
+    
+    color_count = 0  # unikatni oblasti
 
-    color_count = 0
     for i in range(rows):
         for j in range(cols):
             if not visited[i, j] and image[i, j] == 1:
@@ -45,17 +51,20 @@ def colors(image):
                 visited[i, j] = True
                 colors[i, j] = color_count
 
+                # DFS
                 while stack:
-                    current_x, current_y = stack.pop()
+                    current_x, current_y = stack.pop()  # posledni pridany pixel
 
-                    for dx, dy in directions:
+                    for dx, dy in directions:  # ctyri smery
                         new_x, new_y = current_x + dx, current_y + dy
 
+                        # zda je v mezich
                         if 0 <= new_x < rows and 0 <= new_y < cols:
+                            # pokud neni navstiveny a je to objekt
                             if not visited[new_x, new_y] and image[new_x, new_y] == 1:
                                 stack.append((new_x, new_y))
-                                visited[new_x, new_y] = True
-                                colors[new_x, new_y] = color_count
+                                visited[new_x, new_y] = True  # navstiveny
+                                colors[new_x, new_y] = color_count  # stejna barva
     return colors
 
 
@@ -160,10 +169,13 @@ def main():
     
     # vykresleni hodnot minci
     axes[1, 2].imshow(img)
+    total_val = 0
     for coin in values:
         x, y, value = coin.get("point")[0], coin.get("point")[1], coin.get("value")
         axes[1, 2].text(x, y, value, color="red", fontsize=16)
         print(f'x,y {{{x};{y}}}, mince {value}') # vypis do konzole
+        total_val += value
+    print(f'Celkova hodnota: {total_val} Kc')
     axes[1, 2].set_title("Hodnota oblasti")
     
     plt.tight_layout()
