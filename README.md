@@ -23,4 +23,3 @@
 
 ## cv08
 - segmentace obrazu, filtrovani binarniho obrazku otevreni/uzavreni, identifikace objektu pomoci algoritmu barveni, vypocet teziste
->>>>>>> 10c74cf (cv08 - z 1/4 hotove, segmentovani vypada jako ze zadani)
