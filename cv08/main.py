@@ -19,8 +19,6 @@ def main():
     img2_gray = cv2.cvtColor(img2, cv2.COLOR_RGB2GRAY)
 
 
-
-    ## Segmantace prahovani
     # histogram
     #fig_hist, ax_hist = plt.subplots(figsize=(8, 6))
     #ax_hist.hist(img1_gray.ravel(), bins=256, range=(0, 256), color='black', alpha=0.7)
@@ -31,8 +29,11 @@ def main():
 
     # Prahování obrázku - 150 vypada ok
     _, img1_thresh = cv2.threshold(img1_gray, 150,256 , cv2.THRESH_BINARY)
+    _, img2_thresh = cv2.threshold(img2_gray, 150, 256, cv2.THRESH_BINARY)
+
     # Inverze - aby zmizely cerne puntiky
     img1_thresh = cv2.bitwise_not(img1_thresh)
+    img2_thresh = cv2.bitwise_not(img2_thresh)
 
     # První okno s prvnim obrazkem
     fig1, axes1 = plt.subplots(2, 2, figsize=(10, 10))
@@ -59,11 +60,11 @@ def main():
     fig2, axes2 = plt.subplots(2, 2, figsize=(10, 10))
 
     axes2[0, 0].imshow(img2)
-    axes2[0, 0].set_title("Obrázek 2 (1,1)")
+    axes2[0, 0].set_title("Originalni obrazek (1,1)")
     axes2[0, 0].axis("off")
 
-    axes2[0, 1].imshow(img2)
-    axes2[0, 1].set_title("Obrázek 2 (1,2)")
+    axes2[0, 1].imshow(img2_thresh, cmap="gray")
+    axes2[0, 1].set_title("Prahovany obrazek (1,2)")
     axes2[0, 1].axis("off")
 
     axes2[1, 0].imshow(img2)
