@@ -1,6 +1,7 @@
 import cv2
 import matplotlib.pyplot as plt
 from pathlib import Path
+import numpy as np
 
 
 def main():
@@ -44,6 +45,71 @@ def main():
     img1_opened = cv2.morphologyEx(img1_thresh, cv2.MORPH_OPEN, kernel)
     img2_opened = cv2.morphologyEx(img2_thresh, cv2.MORPH_OPEN, kernel)
 
+    def colors(image):
+        rows, cols = image.shape
+        visited = np.zeros_like(image, dtype=bool)
+        colors = np.zeros_like(image, dtype=np.uint8)
+        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        color_count = 1  # Začínáme od 1 kvůli maskám později
+
+        for i in range(rows):
+            for j in range(cols):
+                if not visited[i, j] and image[i, j] == 1:
+                    stack = [(i, j)]
+                    visited[i, j] = True
+                    colors[i, j] = color_count
+
+                    while stack:
+                        current_x, current_y = stack.pop()
+
+                        for dx, dy in directions:
+                            new_x, new_y = current_x + dx, current_y + dy
+                            if 0 <= new_x < rows and 0 <= new_y < cols:
+                                if not visited[new_x, new_y] and image[new_x, new_y] == 1:
+                                    stack.append((new_x, new_y))
+                                    visited[new_x, new_y] = True
+                                    colors[new_x, new_y] = color_count
+                    color_count += 1
+        return colors
+
+    def mass_center(image):
+        points = []
+        max_region = np.max(image)
+
+        for i in range(1, max_region + 1):
+            copy = np.zeros_like(image)
+            copy[image == i] = 1
+
+            moments = cv2.moments(copy, True)
+            if moments["m00"] != 0:
+                center_x = int(moments["m10"] / moments["m00"])
+                center_y = int(moments["m01"] / moments["m00"])
+                points.append((center_x, center_y))
+        return points
+
+    # ---------- hlavní část: těžiště a kreslení ----------
+
+    def draw_mass_centers(original_image, opened_image):
+        # Převedeme na čistou binární (0 a 1)
+        binary = (opened_image > 0).astype(np.uint8)
+
+        # Barvení
+        labeled = colors(binary)
+
+        # Těžiště
+        centers = mass_center(labeled)
+
+        # Zkopíruj **původní** barevný obrázek (tam budeme kreslit)
+        output = original_image.copy()
+
+        # Vykresli těžiště jako zelený křížek
+        for x, y in centers:
+            cv2.drawMarker(output, (x, y), color=(0, 255, 0), markerType=cv2.MARKER_CROSS, markerSize=10, thickness=2)
+
+        return output
+
+    img1_with_centers = draw_mass_centers(img1, img1_opened)
+    img2_with_centers = draw_mass_centers(img2, img2_opened)
 
     # og prvni obrazek
     axes1[0, 0].imshow(img1)
@@ -59,7 +125,7 @@ def main():
     axes1[1, 0].set_title("Obrázek 1 (2,1)")
     axes1[1, 0].axis("off")
 
-    axes1[1, 1].imshow(img1)
+    axes1[1, 1].imshow(img1_with_centers)
     axes1[1, 1].set_title("Obrázek 1 (2,2)")
     axes1[1, 1].axis("off")
 
@@ -78,7 +144,7 @@ def main():
     axes2[1, 0].set_title("Obrázek 2 (2,1)")
     axes2[1, 0].axis("off")
 
-    axes2[1, 1].imshow(img2)
+    axes2[1, 1].imshow(img2_with_centers)
     axes2[1, 1].set_title("Obrázek 2 (2,2)")
     axes2[1, 1].axis("off")
 
