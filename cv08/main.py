@@ -90,19 +90,19 @@ def main():
     # ---------- hlavní část: těžiště a kreslení ----------
 
     def draw_mass_centers(original_image, opened_image):
-        # Převedeme na čistou binární (0 a 1)
+        # Prevod na binarni obrazek
         binary = (opened_image > 0).astype(np.uint8)
 
-        # Barvení
+        # Barveni objektu
         labeled = colors(binary)
 
-        # Těžiště
+        # Vypocet teziste
         centers = mass_center(labeled)
 
-        # Zkopíruj **původní** barevný obrázek (tam budeme kreslit)
+        # Puvodni obrazek, kam vyznacim teziste
         output = original_image.copy()
 
-        # Vykresli těžiště jako zelený křížek
+        # Vykresleni tezisti objektu na puvodni obrazek
         for x, y in centers:
             cv2.drawMarker(output, (x, y), color=(0, 255, 0), markerType=cv2.MARKER_CROSS, markerSize=10, thickness=2)
 
@@ -122,11 +122,11 @@ def main():
     axes1[0, 1].axis("off")
 
     axes1[1, 0].imshow(img1_opened, cmap="gray")
-    axes1[1, 0].set_title("Obrázek 1 (2,1)")
+    axes1[1, 0].set_title("Otevreni (2,1)")
     axes1[1, 0].axis("off")
 
     axes1[1, 1].imshow(img1_with_centers)
-    axes1[1, 1].set_title("Obrázek 1 (2,2)")
+    axes1[1, 1].set_title("Puvodni obrazek s vyznacenimi tezisti objektu (2,2)")
     axes1[1, 1].axis("off")
 
     # Druhy okno s druhym obrazkem
@@ -141,11 +141,11 @@ def main():
     axes2[0, 1].axis("off")
 
     axes2[1, 0].imshow(img2_opened, cmap="gray")
-    axes2[1, 0].set_title("Obrázek 2 (2,1)")
+    axes2[1, 0].set_title("Otevreni (2,1)")
     axes2[1, 0].axis("off")
 
     axes2[1, 1].imshow(img2_with_centers)
-    axes2[1, 1].set_title("Obrázek 2 (2,2)")
+    axes2[1, 1].set_title("Puvodni obrazek s vyznacenimi tezisti objektu (2,2)")
     axes2[1, 1].axis("off")
 
     plt.show()
