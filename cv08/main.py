@@ -27,6 +27,7 @@ def main():
     #ax_hist.set_ylabel("Počet pixelů")
     #plt.show()
 
+    ## DRUHY OBRAZEK
     # Prahování obrázku - 150 vypada ok
     _, img1_thresh = cv2.threshold(img1_gray, 150,256 , cv2.THRESH_BINARY)
     _, img2_thresh = cv2.threshold(img2_gray, 150, 256, cv2.THRESH_BINARY)
@@ -38,6 +39,12 @@ def main():
     # První okno s prvnim obrazkem
     fig1, axes1 = plt.subplots(2, 2, figsize=(10, 10))
 
+    ## TRETI OBRAZEK
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (10, 10))
+    img1_opened = cv2.morphologyEx(img1_thresh, cv2.MORPH_OPEN, kernel)
+    img2_opened = cv2.morphologyEx(img2_thresh, cv2.MORPH_OPEN, kernel)
+
+
     # og prvni obrazek
     axes1[0, 0].imshow(img1)
     axes1[0, 0].set_title("Originalni obrazek (1,1)")
@@ -48,7 +55,7 @@ def main():
     axes1[0, 1].set_title("Prahovany obrazek (1,2)")
     axes1[0, 1].axis("off")
 
-    axes1[1, 0].imshow(img1)
+    axes1[1, 0].imshow(img1_opened, cmap="gray")
     axes1[1, 0].set_title("Obrázek 1 (2,1)")
     axes1[1, 0].axis("off")
 
@@ -67,7 +74,7 @@ def main():
     axes2[0, 1].set_title("Prahovany obrazek (1,2)")
     axes2[0, 1].axis("off")
 
-    axes2[1, 0].imshow(img2)
+    axes2[1, 0].imshow(img2_opened, cmap="gray")
     axes2[1, 0].set_title("Obrázek 2 (2,1)")
     axes2[1, 0].axis("off")
 
