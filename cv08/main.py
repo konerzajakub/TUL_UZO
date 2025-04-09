@@ -30,7 +30,7 @@ def main():
 
     ## DRUHY OBRAZEK
     # Prahování obrázku - 150 vypada ok
-    _, img1_thresh = cv2.threshold(img1_gray, 150,256 , cv2.THRESH_BINARY)
+    _, img1_thresh = cv2.threshold(img1_gray, 150, 256, cv2.THRESH_BINARY)
     _, img2_thresh = cv2.threshold(img2_gray, 150, 256, cv2.THRESH_BINARY)
 
     # Inverze - aby zmizely cerne puntiky
