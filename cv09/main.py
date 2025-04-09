@@ -96,38 +96,37 @@ def main():
     centers = mass_center(sections)
     without_zero = len(centers) - 1
 
-    # Plot the original image and its histogram
     fig, ax = plt.subplots(2, 3, figsize=(18, 8))
 
-    # Original image
+    # origo_image
     ax[0, 0].imshow(origo_image, cmap='gray')
     ax[0, 0].set_title('Original Image')
     ax[0, 0].axis('off')
 
-    # Original image histogram
+    # origo_image histogram
     ax[0, 1].plot(origo_smoothed, color='blue')
     ax[0, 1].set_title('Original Image Histogram')
     ax[0, 1].set_xlabel('Pixel Intensity')
     ax[0, 1].set_ylabel('Frequency')
 
-    # Top-hat image
+    # top_hat image
     ax[1, 0].imshow(top_hat, cmap='gray')
     ax[1, 0].set_title('Top-Hat Image')
     ax[1, 0].axis('off')
 
-    # Top-hat image histogram
+    # top_hat image histogram
     ax[1, 1].plot(top_hat_smoothed, color='blue')
     ax[1, 1].set_title('Top-Hat Image Histogram')
     ax[1, 1].set_xlabel('Pixel Intensity')
     ax[1, 1].set_ylabel('Frequency')
 
-    # Original image with centers of mass
+    # origo_image s centry
     ax[0, 2].imshow(origo_image, cmap='gray')
     for center in centers:
-        ax[0, 2].plot(center[0], center[1], 'ro')  # Red dots for centers
+        ax[0, 2].plot(center[0], center[1], 'ro')
     ax[0, 2].set_title('Original Image with Centers of Mass')
     ax[0, 2].axis('off')
-    # Filter centers based on region size
+    
     valid_centers = []
     for i, center in enumerate(centers, start=1):
         region_size = np.sum(sections == i)
@@ -136,7 +135,7 @@ def main():
 
     ax[0, 2].set_title(f'Pocet zrn {len(valid_centers)}')
 
-    # Empty subplot for layout balance
+    
     ax[1, 2].axis('off')
 
 
