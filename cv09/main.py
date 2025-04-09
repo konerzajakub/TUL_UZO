@@ -88,7 +88,7 @@ def main():
     top_hat_smoothed = np.convolve(top_hat_flattened, np.ones(3) / 3, mode='same')
 
     top_hat_segmentation = np.zeros_like(top_hat)
-    target = 72
+    target = 60
     top_hat_segmentation[top_hat < target] = 0
     top_hat_segmentation[top_hat >= target] = 1
 
