@@ -12,13 +12,13 @@ def main():
 
     img1 = cv2.imread(str(obrazek1_cesta))
     img2 = cv2.imread(str(obrazek2_cesta))
+    img2_rgb = cv2.cvtColor(img2, cv2.COLOR_BGR2RGB)
 
     img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
-    img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2RGB)
+    img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2HSV)
 
     img1_gray = cv2.cvtColor(img1, cv2.COLOR_RGB2GRAY)
     img2_gray = cv2.cvtColor(img2, cv2.COLOR_RGB2GRAY)
-
 
     # histogram
     #fig_hist, ax_hist = plt.subplots(figsize=(8, 6))
@@ -29,13 +29,17 @@ def main():
     #plt.show()
 
     ## DRUHY OBRAZEK
-    # Prahování obrázku - 150 vypada ok
+    # Prahování obrázku 1 - 150 vypada ok
     _, img1_thresh = cv2.threshold(img1_gray, 150, 256, cv2.THRESH_BINARY)
-    _, img2_thresh = cv2.threshold(img2_gray, 150, 256, cv2.THRESH_BINARY)
+
+
+    # Prahování obrázku 2
+    img2_red = img2[:, :, 0]  # Červený kanál
+    _, img2_thresh = cv2.threshold(img2_red, 150, 256, cv2.THRESH_BINARY)
 
     # Inverze - aby zmizely cerne puntiky
     img1_thresh = cv2.bitwise_not(img1_thresh)
-    img2_thresh = cv2.bitwise_not(img2_thresh)
+    #img2_thresh = cv2.bitwise_not(img2_thresh)
 
     # První okno s prvnim obrazkem
     fig1, axes1 = plt.subplots(2, 2, figsize=(10, 10))
@@ -44,7 +48,7 @@ def main():
     # zbaveni sumu, kernel = epilepticke jadro pro morfologicke operace (eroze, dilatace)
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (10, 10))
     img1_opened = cv2.morphologyEx(img1_thresh, cv2.MORPH_OPEN, kernel)
-    img2_opened = cv2.morphologyEx(img2_thresh, cv2.MORPH_OPEN, kernel)
+    img2_opened = img2_thresh
 
     def colors(image):
         """
@@ -140,7 +144,7 @@ def main():
     # Druhy okno s druhym obrazkem
     fig2, axes2 = plt.subplots(2, 2, figsize=(10, 10))
 
-    axes2[0, 0].imshow(img2)
+    axes2[0, 0].imshow(img2_rgb)
     axes2[0, 0].set_title("Originalni obrazek (1,1)")
     axes2[0, 0].axis("off")
 
@@ -148,7 +152,7 @@ def main():
     axes2[0, 1].set_title("Prahovany obrazek (1,2)")
     axes2[0, 1].axis("off")
 
-    axes2[1, 0].imshow(img2_opened, cmap="gray")
+    axes2[1, 0].imshow(img2_red, cmap="jet")
     axes2[1, 0].set_title("Otevreni (2,1)")
     axes2[1, 0].axis("off")
 
