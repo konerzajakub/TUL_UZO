@@ -41,11 +41,15 @@ def main():
     fig1, axes1 = plt.subplots(2, 2, figsize=(10, 10))
 
     ## TRETI OBRAZEK
+    # zbaveni sumu, kernel = epilepticke jadro pro morfologicke operace (eroze, dilatace)
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (10, 10))
     img1_opened = cv2.morphologyEx(img1_thresh, cv2.MORPH_OPEN, kernel)
     img2_opened = cv2.morphologyEx(img2_thresh, cv2.MORPH_OPEN, kernel)
 
     def colors(image):
+        """
+            Vystupem funkce je matice s ciselnymi hodnotami jednotlivych oblasti
+        """
         rows, cols = image.shape
         visited = np.zeros_like(image, dtype=bool)
         colors = np.zeros_like(image, dtype=np.uint8)
@@ -73,16 +77,20 @@ def main():
         return colors
 
     def mass_center(image):
+        """
+            Vezme nejvetsi hodnotu z matice a postupne projde vsechny oblasti, pro ktere vypocita teziste
+        """
         points = []
         max_region = np.max(image)
 
         for i in range(1, max_region + 1):
+            #zkopiruje jen oblast s danym indexme
             copy = np.zeros_like(image)
             copy[image == i] = 1
 
-            moments = cv2.moments(copy, True)
+            moments = cv2.moments(copy, True) # vypocet momentu
             if moments["m00"] != 0:
-                center_x = int(moments["m10"] / moments["m00"])
+                center_x = int(moments["m10"] / moments["m00"]) # m00 plocha objektu, m10 a m01 suma vsech x a y souradnic pixelu
                 center_y = int(moments["m01"] / moments["m00"])
                 points.append((center_x, center_y))
         return points
