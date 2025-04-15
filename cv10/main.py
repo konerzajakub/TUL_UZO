@@ -87,100 +87,72 @@ print("Trénovací část dokončena.\n")
 # --- Testovací část ---
 print("Spouštím testovací část...")
 
-# 1) Načtení neznámého obrázku, převod na šedotónový, vytvoření vektoru wpu
-print("Krok 1 (test): Načítání neznámého obrázku a převod na vektor wpu...")
-# Načtení neznámého obrázku v šedotónovém režimu
+# --- Krok 1 (Test) ---
+print("Krok 1: Převedení neznámého obrázku do stupně šedi a vytvoření vektoru wpu")
 unknown_img_gray = cv2.imread("cv10_PCA/unknown.bmp", cv2.IMREAD_GRAYSCALE)
-
-# Zkontrolujeme rozměry neznámého obrázku
-if unknown_img_gray.shape != rozmery_obrazku:
-     raise ValueError(
-         f"Neznámý obrázek '{'unknown.bmp'}' má jiné rozměry ({unknown_img_gray.shape}) "
-         f"než trénovací obrázky ({rozmery_obrazku})."
-     )
-
-# Zploštění na vektor
-wpu = unknown_img_gray.flatten()
-print(f"   Neznámý obrázek načten a převeden na vektor wpu, délka: {wpu.shape[0]}")
+wpu = unknown_img_gray.flatten() # Zploštění na vektor
+print(f"   Wpu, délka: {wpu.shape[0]}")
 print()
 
-# 2) Centrování neznámého vektoru wu
-print("Krok 2 (test): Centrování neznámého vektoru (wu = wpu - wp)...")
+# --- Krok 2 (Test) ---
+print("Krok 2 (test): Vektor wu = wpu – wp")
 wu = wpu - wp.flatten()
-print(f"   Neznámý vektor centrován do wu, délka: {wu.shape[0]}")
+print(f"   Wu, délka: {wu.shape[0]}")
 print()
 
-# 3) Projekce neznámého vektoru PT do vlastního prostoru
-print("Krok 3 (test): Projekce neznámého vektoru wu do vlastního prostoru (výpočet PT)...")
+# --- Krok 3 (Test) ---
+print("Krok 3 (test): Projekce neznámého vektoru PT = ET * wu")
 PT = vlastni_prostor_EigenSpace.T @ wu
 print(f"   Projekce PT neznámého vektoru vypočítána, rozměry: {PT.shape}")
 print()
 
-# 4) Porovnání neznámého příznakového vektoru PT se známými PI
-print("Krok 4 (test): Porovnání PT s PI pomocí Euklidovské vzdálenosti...")
+# --- Krok 4 (test) - Alternativa s cyklem ---
+print("Krok 4 (test): Porovnání známých příznakových vektorů PI(i) a neznámého PT – např. dle minimální vzdálenosti")
 
-# Efektivní výpočet všech vzdáleností najednou pomocí broadcastingu
-# PT potřebujeme jako sloupcový vektor (N_eigenvect, 1)
-PT_col = PT.reshape(-1, 1)
-# PI má rozměry (N_eigenvect, N_images)
-# PI - PT_col odečte PT od každého sloupce PI
-# np.linalg.norm(..., axis=0) spočítá normu (délku) každého výsledného sloupce
-distances = np.linalg.norm(PI - PT_col, axis=0)
+pocet_znamych_obrazku = PI.shape[1] # počet známých obrázků
 
-# Najdeme index minimální vzdálenosti
-best_match_index = np.argmin(distances)
-# Získáme název souboru nejlépe odpovídajícího obrázku z původního seznamu
-identified_image_path = seznam_pXX_souboru[best_match_index]
-# Získáme minimální vzdálenost
-min_distance = distances[best_match_index]
+min_vzdalenost = float('inf')  # nastavíme na nekonečno pro první porovnání
+index_nejlepsi_shody = None      # index nejlepší shody (-1 = zatím žádná)
 
-print(f"   Nalezen nejbližší známý obrázek:")
-print(f"      Index: {best_match_index}")
-print(f"      Soubor: {os.path.basename(identified_image_path)}") # Zobrazíme jen název souboru
-print(f"      Vzdálenost: {min_distance:.4f}")
+# Projdeme všechny sloupce matice PI (každý sloupec = projekce známého obrázku)
+for i in range(pocet_znamych_obrazku):
+    vektor_projekce_znamy = PI[:, i] # Vektor projekce i-tého známého obrázku
 
-print("Testovací část dokončena.\n")
+    # Výpočet Euklidovské vzdálenosti mezi PT a projekcí známého obrázku
+    vzdalenost = np.linalg.norm(PT - vektor_projekce_znamy) # np.linalg.norm(a - b) = Euklid. vzdálenost
+
+    # Pokud je aktuální vzdálenost menší než dosavadní minimum (TATO PODMÍNKA ZŮSTÁVÁ)
+    if vzdalenost < min_vzdalenost:
+        min_vzdalenost = vzdalenost    # Aktualizujeme minimální vzdálenost
+        index_nejlepsi_shody = i       # Aktualizujeme index nejlepší shody
+
+
+cesta_identifikovaneho_obrazku = seznam_pXX_souboru[index_nejlepsi_shody] # Cestu k souboru nejlépe odpovídajícího obrázku
+
+print(f"   Nalezen nejbližší známý obrázek: {index_nejlepsi_shody}")
+print(f"   Vzdálenost: {min_vzdalenost:.4f}")
 
 # --- Zobrazení výsledku ---
-print("Zobrazuji výsledek...")
 
-# Načtení originálního neznámého obrázku (tentokrát barevně, pokud existuje)
-# OpenCV načítá ve formátu BGR (Blue-Green-Red)
-original_unknown_img_bgr = cv2.imread("cv10_PCA/unknown.bmp", cv2.COLOR_BGR2RGB)
-original_unknown_img_rgb = cv2.cvtColor(original_unknown_img_bgr, cv2.COLOR_BGR2RGB)
+# Načtení originálního neznámého obrázku (barevně)
+puvodni_neznamy_img_bgr = cv2.imread("cv10_PCA/unknown.bmp", cv2.IMREAD_COLOR) # Načtení jako BGR
+puvodni_neznamy_img_rgb = cv2.cvtColor(puvodni_neznamy_img_bgr, cv2.COLOR_BGR2RGB) # Převod BGR -> RGB
 
-
-# Načtení identifikovaného obrázku (barevně, pokud existuje)
-identified_img_bgr = cv2.imread(identified_image_path, cv2.IMREAD_COLOR)
-if identified_img_bgr is None:
-    print(f"Varování: Nepodařilo se načíst barevný identifikovaný obrázek {identified_image_path} pro zobrazení.")
-    # Zkusíme načíst šedotónově a převést
-    identified_img_gray = cv2.imread(identified_image_path, cv2.IMREAD_GRAYSCALE)
-    if identified_img_gray is not None:
-        identified_img_rgb = cv2.cvtColor(identified_img_gray, cv2.COLOR_GRAY2RGB)
-    else:
-        # Pokud selže i šedotónové načtení, vytvoříme černý placeholder
-        h, w = rozmery_obrazku
-        identified_img_rgb = np.zeros((h, w, 3), dtype=np.uint8)
-else:
-    # Převedení BGR na RGB
-    identified_img_rgb = cv2.cvtColor(identified_img_bgr, cv2.COLOR_BGR2RGB)
-
+# Načtení identifikovaného obrázku (barevně)
+identifikovany_img_bgr = cv2.imread(cesta_identifikovaneho_obrazku, cv2.IMREAD_COLOR)
+identifikovany_img_rgb = cv2.cvtColor(identifikovany_img_bgr, cv2.COLOR_BGR2RGB) # Převod BGR -> RGB
 
 # Vytvoření okna pro zobrazení dvou obrázků vedle sebe
-fig, axes = plt.subplots(1, 2, figsize=(10, 5)) # 1 řádek, 2 sloupce
+fig, osy = plt.subplots(1, 2, figsize=(10, 5)) # 1 řádek, 2 sloupce
 
 # Zobrazení originálního neznámého obrázku vlevo
-axes[0].imshow(original_unknown_img_rgb)
-axes[0].set_title(f"Neznámý obrázek\n({'unknown.bmp'})")
-axes[0].axis('off')
+osy[0].imshow(puvodni_neznamy_img_rgb)
+osy[0].set_title(f"Neznámý obrázek\n({'unknown.bmp'})")
+osy[0].axis('off') # Skrytí os
 
 # Zobrazení identifikovaného (nejpodobnějšího) obrázku vpravo
-axes[1].imshow(identified_img_rgb)
-axes[1].set_title(f"Identifikovaný obrázek\n({os.path.basename(identified_image_path)})")
-axes[1].axis('off')
+osy[1].imshow(identifikovany_img_rgb)
+osy[1].set_title(f"Identifikovaný obrázek\n({os.path.basename(cesta_identifikovaneho_obrazku)})")
+osy[1].axis('off') # Skrytí os
 
-plt.tight_layout()
 plt.show()
-
-print("Hotovo.")
