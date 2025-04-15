@@ -23,3 +23,6 @@
 
 ## cv08
 - segmentace obrazu, filtrovani binarniho obrazku otevreni/uzavreni, identifikace objektu pomoci algoritmu barveni, vypocet teziste
+
+## cv10
+- Rozpoznávání obrazů - PCA
