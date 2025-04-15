@@ -1,12 +1,9 @@
 # Import knihoven
-import numpy as np         # Pro numerické operace, zejména s poli a maticemi
-import cv2                 # OpenCV pro načítání a manipulaci s obrázky
-import os                  # Pro práci se souborovým systémem (nalezení souborů)
-import glob                # Pro snadnější vyhledávání souborů podle vzoru
-import matplotlib.pyplot as plt # Pro zobrazení obrázků
-
-# --- Konfigurace ---
-#'unknown.bmp' = 'unknown.bmp'
+import numpy as np
+import cv2
+import os
+import glob
+import matplotlib.pyplot as plt
 
 # --- Trénovací část ---
 print("Trénovací část")
@@ -15,15 +12,13 @@ seznam_pXX_souboru = sorted(glob.glob("cv10_PCA/p??.bmp"))  # serazeno
 
 # Seznam pro uložení obrazových dat jako vektorů
 vektory_obrazku = []
-rozmery_obrazku = None # rozměry obrázku
 
 # --- Krok 1 ---
 print("Krok 1: Načítání šedotónových obrázků, převod na vektory")
 for image_path in seznam_pXX_souboru:
-    img_gray = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE) # načtení obrázku v šedotónech
-    rozmery_obrazku = img_gray.shape                        # uložení rozměru obrázku
-    img_vector = img_gray.flatten()                         # zploštění matice obrázku do jednoho vektoru (řádky za sebou)
-    vektory_obrazku.append(img_vector)
+    img_sedy = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE) # načtení obrázku v šedotónech
+    img_vektor = img_sedy.flatten()                         # zploštění matice obrázku do jednoho vektoru (řádky za sebou)
+    vektory_obrazku.append(img_vektor)
 print()
 
 # --- Krok 2 ---
@@ -73,7 +68,7 @@ print()
 print("Krok 8: Vytvoření matice (vlastní prostor – EigenSpace) E = W * Ep – velikost 4096 x 9")
 vlastni_prostor_EigenSpace = W @ vlastni_vektory_serazene         # Vlastní vektory v původním prostoru pomocí W @ Ep (rekonstrukce eigenfaces)
 print(f"   Matice vlastního prostoru E vytvořena, rozměry: {vlastni_prostor_EigenSpace.shape}")
-# E = E / np.linalg.norm(E, axis=0)
+# E = E / np.linalg.norm(E, axis=0) # norma??
 print()
 
 # --- Krok 9 ---
@@ -85,7 +80,7 @@ print()
 print("Trénovací část dokončena.\n")
 
 # --- Testovací část ---
-print("Spouštím testovací část...")
+print("Testovací část.")
 
 # --- Krok 1 (Test) ---
 print("Krok 1: Převedení neznámého obrázku do stupně šedi a vytvoření vektoru wpu")
@@ -106,7 +101,7 @@ PT = vlastni_prostor_EigenSpace.T @ wu
 print(f"   Projekce PT neznámého vektoru vypočítána, rozměry: {PT.shape}")
 print()
 
-# --- Krok 4 (test) - Alternativa s cyklem ---
+# --- Krok 4 (test) - Euklidovská vzdálenost ---
 print("Krok 4 (test): Porovnání známých příznakových vektorů PI(i) a neznámého PT – např. dle minimální vzdálenosti")
 
 pocet_znamych_obrazku = PI.shape[1] # počet známých obrázků
@@ -114,11 +109,11 @@ pocet_znamych_obrazku = PI.shape[1] # počet známých obrázků
 min_vzdalenost = float('inf')  # nastavíme na nekonečno pro první porovnání
 index_nejlepsi_shody = None      # index nejlepší shody (-1 = zatím žádná)
 
-# Projdeme všechny sloupce matice PI (každý sloupec = projekce známého obrázku)
+# Pro každý sloupec PI
 for i in range(pocet_znamych_obrazku):
-    vektor_projekce_znamy = PI[:, i] # Vektor projekce i-tého známého obrázku
+    vektor_projekce_znamy = PI[:, i] # Vezmeme se jeden vektor
 
-    # Výpočet Euklidovské vzdálenosti mezi PT a projekcí známého obrázku
+    # Výpočet Euklidovské vzdálenosti mezi PT a jedním vektorem PI
     vzdalenost = np.linalg.norm(PT - vektor_projekce_znamy) # np.linalg.norm(a - b) = Euklid. vzdálenost
 
     # Pokud je aktuální vzdálenost menší než dosavadní minimum (TATO PODMÍNKA ZŮSTÁVÁ)
@@ -129,7 +124,7 @@ for i in range(pocet_znamych_obrazku):
 
 cesta_identifikovaneho_obrazku = seznam_pXX_souboru[index_nejlepsi_shody] # Cestu k souboru nejlépe odpovídajícího obrázku
 
-print(f"   Nalezen nejbližší známý obrázek: {index_nejlepsi_shody}")
+print(f"   Nejbližší obrázek z datasetu: {index_nejlepsi_shody}")
 print(f"   Vzdálenost: {min_vzdalenost:.4f}")
 
 # --- Zobrazení výsledku ---
