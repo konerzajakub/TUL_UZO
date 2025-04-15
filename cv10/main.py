@@ -36,57 +36,52 @@ print()
 # --- Krok 3 ---
 print("Krok 3: Výpočet průměrného vektoru wp")
 wp = np.mean(Wp, axis=1, keepdims=True)         # průměrný vektor (průměr po řádcích)
-print(f"   Průměrný vektor wp vypočítán, rozměry: {wp.shape}")
+print(f"   Průměrný vektor wp, rozměry: {wp.shape}")
 print()
 
 # --- Krok 4 ---
 print("Krok 4: Vytvoření matice W – od sloupců Wp odečten wp")
 W = Wp - wp                                     # od sloupců Wp odečten wp
-print(f"   Matice W vytvořena, rozměry: {W.shape}")
+print(f"   Matice W, rozměry: {W.shape}")
 print()
 
 # --- Krok 5 ---
 print("Krok 5: Vytvoření kovarianční matice C = WT * W – velikost 9 x 9")
-C = W.T @ W
-print(f"   Kovarianční matice C vypočítána, rozměry: {C.shape}")
+C = W.T @ W                                     # Malá kovarianční matice (velikost: obrázky × obrázky)
+print(f"    Kovarianční matice C, rozměry: {C.shape}")
 print()
 
-# 6) Výpočet vlastních čísel a vlastních vektorů matice C
-print("Krok 6: Výpočet vlastních čísel a vektorů matice C...")
-D, Epom = np.linalg.eig(C)
-# Poznámka: Vlastní čísla a vektory mohou být komplexní, pokud C není dokonale symetrická
-# kvůli numerickým chybám. Pro reálná data bychom měli dostat reálné výsledky.
-# Pokud je třeba, vezmeme jen reálnou část: D = np.real(D); Epom = np.real(Epom)
-D = np.real(D)
-Epom = np.real(Epom)
-print(f"   Vlastní čísla (D) a vlastní vektory (Epom) matice C nalezeny.")
-print(f"      Rozměry D: {D.shape}")
-print(f"      Rozměry Epom: {Epom.shape}")
+# --- Krok 6 ---
+print("Krok 6: Z matice C spočítány vlastní čísla a jím náležející vlastní vektory")
+vlastni_cisla, vlastni_vektory = np.linalg.eig(C)   # Vypočet vlastních čísel
+vlastni_cisla = np.real(vlastni_cisla)              # Vezme jen reálnou část vlastních čísel
+vlastni_vektory = np.real(vlastni_vektory)          # Vezme jen reálnou část vlastních vektorů
+print(f"   Vlastní čísla a vlastní vektory matice C.")
+print(f"      Rozměry D: {vlastni_cisla.shape}")
+print(f"      Rozměry Epom: {vlastni_vektory.shape}")
 print()
 
-# 7) Seřazení vlastních vektorů podle velikosti vlastních čísel
-print("Krok 7: Seřazení vlastních vektorů Epom podle vlastních čísel...")
-sorted_indices = np.argsort(D)[::-1]
-D_sorted = D[sorted_indices]
-Ep = Epom[:, sorted_indices]
-print(f"   Vlastní vektory seřazeny do matice Ep, rozměry: {Ep.shape}")
+# --- Krok 7 ---
+print("Krok 7: Z vlastních vektorů vytvořena matice Ep")
+serazene_indexy = np.argsort(vlastni_cisla)[::-1]                 # Seřazení indexů vlastních čísel sestupně
+vlastni_cisla_serazene = vlastni_cisla[serazene_indexy]           # Seřazená vlastní čísla
+vlastni_vektory_serazene = vlastni_vektory[:, serazene_indexy]    # Seřazené vlastní vektory
+print(f"   Vlastní vektory seřazeny do matice Ep, rozměry: {vlastni_vektory_serazene.shape}")
 print()
 
-# 8) Vytvoření matice vlastního prostoru E (EigenSpace)
-print("Krok 8: Vytvoření báze vlastního prostoru E (Eigenfaces)...")
-E = W @ Ep
-print(f"   Matice vlastního prostoru E vytvořena, rozměry: {E.shape}")
-# Normalizace vektorů v E (volitelné, ale často doporučené)
+# --- Krok 8 ---
+print("Krok 8: Vytvoření matice (vlastní prostor – EigenSpace) E = W * Ep – velikost 4096 x 9")
+vlastni_prostor_EigenSpace = W @ vlastni_vektory_serazene         # Vlastní vektory v původním prostoru pomocí W @ Ep (rekonstrukce eigenfaces)
+print(f"   Matice vlastního prostoru E vytvořena, rozměry: {vlastni_prostor_EigenSpace.shape}")
 # E = E / np.linalg.norm(E, axis=0)
-# print(f"   (Volitelné: Vlastní vektory v E normalizovány)")
 print()
 
-# 9) Projekce známých vektorů do vlastního prostoru (výpočet příznaků PI)
-print("Krok 9: Projekce trénovacích dat do vlastního prostoru (výpočet PI)...")
-PI = E.T @ W
+# --- Krok 9 ---
+print("Krok 9: Projekce známých vektorů do vlastního prostoru PI = ET * W")
+PI = vlastni_prostor_EigenSpace.T @ W
 print(f"   Projekce PI trénovacích dat vypočítána, rozměry: {PI.shape}")
-
 print()
+
 print("Trénovací část dokončena.\n")
 
 # --- Testovací část ---
@@ -117,7 +112,7 @@ print()
 
 # 3) Projekce neznámého vektoru PT do vlastního prostoru
 print("Krok 3 (test): Projekce neznámého vektoru wu do vlastního prostoru (výpočet PT)...")
-PT = E.T @ wu
+PT = vlastni_prostor_EigenSpace.T @ wu
 print(f"   Projekce PT neznámého vektoru vypočítána, rozměry: {PT.shape}")
 print()
 
