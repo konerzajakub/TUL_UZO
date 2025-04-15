@@ -34,7 +34,7 @@ def main():
 
 
     # Prahování obrázku 2
-    img2_red = img2[:, :, 0]  # Červený kanál
+    img2_red = img2[:, :, 0]
     _, img2_thresh = cv2.threshold(img2_red, 150, 256, cv2.THRESH_BINARY)
 
     # Inverze - aby zmizely cerne puntiky
