@@ -129,25 +129,20 @@ print(f"   Vzdálenost: {min_vzdalenost:.4f}")
 
 # --- Zobrazení výsledku ---
 
-# Načtení originálního neznámého obrázku (barevně)
 puvodni_neznamy_img_bgr = cv2.imread("cv10_PCA/unknown.bmp", cv2.IMREAD_COLOR) # Načtení jako BGR
 puvodni_neznamy_img_rgb = cv2.cvtColor(puvodni_neznamy_img_bgr, cv2.COLOR_BGR2RGB) # Převod BGR -> RGB
 
-# Načtení identifikovaného obrázku (barevně)
 identifikovany_img_bgr = cv2.imread(cesta_identifikovaneho_obrazku, cv2.IMREAD_COLOR)
 identifikovany_img_rgb = cv2.cvtColor(identifikovany_img_bgr, cv2.COLOR_BGR2RGB) # Převod BGR -> RGB
 
-# Vytvoření okna pro zobrazení dvou obrázků vedle sebe
 fig, osy = plt.subplots(1, 2, figsize=(10, 5)) # 1 řádek, 2 sloupce
 
-# Zobrazení originálního neznámého obrázku vlevo
 osy[0].imshow(puvodni_neznamy_img_rgb)
-osy[0].set_title(f"Neznámý obrázek\n({'unknown.bmp'})")
+osy[0].set_title(f"Unknown: \n({'unknown.bmp'})")
 osy[0].axis('off') # Skrytí os
 
-# Zobrazení identifikovaného (nejpodobnějšího) obrázku vpravo
 osy[1].imshow(identifikovany_img_rgb)
-osy[1].set_title(f"Identifikovaný obrázek\n({os.path.basename(cesta_identifikovaneho_obrazku)})")
+osy[1].set_title(f"Nejbližší obrázek: \n({os.path.basename(cesta_identifikovaneho_obrazku)})")
 osy[1].axis('off') # Skrytí os
 
 plt.show()
